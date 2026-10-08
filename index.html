@@ -1,0 +1,1540 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f3">
+  <title>Бяла дъска</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #252b35;
+      background: #f7f7f3;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #252b35;
+      --muted: #7c8490;
+      --line: #e9e9e3;
+      --purple: #7768e8;
+      --purple-dark: #6253d1;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+
+    .app { height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      z-index: 5;
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 12px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 252, .94);
+      box-shadow: 0 2px 12px rgba(39, 43, 52, .035);
+    }
+    .brand-group { display: flex; align-items: center; gap: 15px; min-width: 0; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 165px; }
+    .brand-mark {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      color: white; border-radius: 13px;
+      background: linear-gradient(145deg, #8e80f6, #6858db);
+      box-shadow: 0 5px 12px #7768e838;
+    }
+    .brand-mark svg { width: 23px; height: 23px; }
+    .brand h1 { margin: 0; font-size: 17px; letter-spacing: -.35px; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .project-picker { position: relative; flex: none; }
+    .project-trigger {
+      max-width: 190px; min-height: 38px; display: flex; align-items: center; gap: 7px;
+      padding: 0 11px; border: 1px solid #eae9f3; border-radius: 10px;
+      background: #fff; color: #5b6270; cursor: pointer; font-size: 12px; font-weight: 600;
+    }
+    .project-trigger:hover, .project-picker.open .project-trigger { border-color: #d8d3ff; background: #f9f8ff; color: var(--purple-dark); }
+    .project-trigger svg { width: 15px; height: 15px; flex: none; }
+    .project-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .project-menu {
+      position: absolute; z-index: 15; top: calc(100% + 9px); left: 0;
+      width: min(330px, calc(100vw - 24px)); padding: 9px;
+      border: 1px solid #ecebf2; border-radius: 14px; background: #fff;
+      box-shadow: 0 14px 38px #24233822;
+    }
+    .project-menu[hidden] { display: none; }
+    .project-menu-heading { display: flex; align-items: center; justify-content: space-between; padding: 5px 7px 9px; color: #8b909a; font-size: 11px; font-weight: 700; letter-spacing: .45px; text-transform: uppercase; }
+    .project-new {
+      display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 9px;
+      border: 1px dashed #d8d3f8; border-radius: 10px; background: #f8f7ff;
+      color: #6558cb; cursor: pointer; font-size: 12px; font-weight: 650; text-align: left;
+    }
+    .project-new:hover { background: #efedff; }
+    .project-new svg { width: 16px; height: 16px; }
+    .project-list { display: grid; gap: 3px; max-height: 280px; overflow: auto; margin-top: 8px; }
+    .project-row { display: flex; align-items: center; gap: 3px; min-width: 0; padding: 3px; border-radius: 9px; }
+    .project-row.active { background: #f1efff; }
+    .project-open {
+      min-width: 0; flex: 1; overflow: hidden; padding: 8px; border: 0;
+      border-radius: 7px; background: transparent; color: #4c5360;
+      cursor: pointer; font-size: 12px; text-align: left; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .project-row.active .project-open { color: #5e51c6; font-weight: 650; }
+    .project-open:hover { background: #f8f7ff; }
+    .project-action {
+      width: 28px; height: 28px; display: grid; place-items: center; flex: none;
+      border: 0; border-radius: 7px; background: transparent; color: #969ba4; cursor: pointer;
+    }
+    .project-action:hover { background: #ecebfa; color: #6055c2; }
+    .project-action.delete:hover { background: #fff0ef; color: #c55353; }
+    .project-action svg { width: 14px; height: 14px; }
+    .project-empty { padding: 12px 9px; color: #9298a1; font-size: 12px; }
+    .tools { display: flex; align-items: center; justify-content: center; gap: 7px; flex: 1; }
+    .tool {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 42px; padding: 0 13px; border: 1px solid transparent;
+      border-radius: 12px; background: transparent; color: #59616e;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      transition: background .16s, color .16s, border-color .16s, transform .16s;
+    }
+    .tool:hover { background: #f2f1ff; color: var(--purple-dark); transform: translateY(-1px); }
+    .tool.active { background: #efedff; border-color: #dfdcff; color: var(--purple-dark); }
+    .tool svg { width: 18px; height: 18px; flex: none; }
+    .saved-state {
+      min-width: 155px; display: flex; justify-content: flex-end; align-items: center;
+      gap: 7px; color: var(--muted); font-size: 12px;
+    }
+    .saved-state .dot { width: 7px; height: 7px; border-radius: 50%; background: #67bd8b; }
+    .saved-state.saving .dot { background: #e7a642; }
+    .saved-state.error .dot { background: #dc6262; }
+
+    .board-scroll { position: relative; flex: 1; overflow: auto; overscroll-behavior: contain; }
+    .board-space {
+      position: relative; flex: none; overflow: hidden; background-color: #fbfbf8;
+      background-image: radial-gradient(#d9d9d2 1px, transparent 1px);
+      background-position: 8px 8px;
+    }
+    .board {
+      position: absolute; left: 0; top: 0; width: 2600px; height: 1800px;
+      isolation: isolate; transform-origin: top left;
+    }
+    .welcome {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      z-index: 1; text-align: center; color: #969ca4; pointer-events: none;
+    }
+    .welcome-icon {
+      margin: 0 auto 13px; display: grid; place-items: center;
+      width: 55px; height: 55px; border: 1px solid #e9e9e3; border-radius: 18px;
+      background: #fff; color: #a8a9b3;
+    }
+    .welcome-icon svg { width: 26px; height: 26px; }
+    .welcome strong { display: block; margin-bottom: 6px; color: #676f7a; font-size: 15px; font-weight: 600; }
+    .welcome span { font-size: 13px; }
+    .welcome.hidden { display: none; }
+
+    .card {
+      position: absolute; z-index: 2; width: 286px; overflow: hidden;
+      border: 1px solid rgba(59, 63, 70, .08); border-radius: 15px;
+      background: #fff; box-shadow: 0 7px 22px rgba(42, 44, 49, .085);
+      transition: box-shadow .16s, border-color .16s;
+    }
+    .card:hover { box-shadow: 0 10px 28px rgba(42, 44, 49, .13); }
+    .card.dragging, .card.resizing { z-index: 3; border-color: #b8afff; box-shadow: 0 14px 32px rgba(61, 55, 109, .2); }
+    .card.link-source { outline: 3px solid #7768e8; outline-offset: 2px; }
+    .card.link-target { cursor: crosshair; outline: 2px dashed #7aa986; outline-offset: 2px; }
+    .card-header {
+      height: 37px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 11px 0 14px; cursor: grab; touch-action: none; user-select: none;
+    }
+    .card-header:active { cursor: grabbing; }
+    .card-kind { color: #949aa4; font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+    .card-actions { display: flex; align-items: center; gap: 2px; }
+    .icon-button {
+      width: 27px; height: 27px; display: grid; place-items: center;
+      border: 0; border-radius: 8px; background: transparent; color: #a0a5ad; cursor: pointer;
+    }
+    .icon-button:hover { background: #f4f3f8; color: #5c6270; }
+    .icon-button.delete:hover { color: #d05a5a; background: #fff0ef; }
+    .icon-button svg { width: 15px; height: 15px; }
+    .link-button { width: 27px; height: 27px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #8780c8; cursor: pointer; }
+    .link-button:hover, .link-button.active { background: #eceaff; color: #5547c3; }
+    .link-button svg { width: 15px; height: 15px; }
+    .text-card { background: #fff5c9; border-color: #f5e9ad; }
+    .text-card .card-header { background: #fff5c9; }
+    .font-size-control { width: 27px; height: 27px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: #8d8254; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .font-size-control:hover { background: #f5e9ad; color: #514527; }
+    .text-card textarea {
+      display: block; width: 100%; height: calc(100% - 37px); min-height: 68px; resize: none;
+      padding: 2px 16px 15px; border: 0; outline: 0; background: transparent;
+      color: #484538; font-size: 14px; line-height: 1.65;
+    }
+    .text-card textarea::placeholder { color: #aaa17d; }
+    .image-card { width: 300px; }
+    .image-card img { display: block; width: 100%; height: calc(100% - 68px); object-fit: contain; background: #f4f3f0; cursor: zoom-in; }
+    .image-caption { height: 31px; padding: 9px 13px 8px; overflow: hidden; color: #707783; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .file-body { display: flex; align-items: center; gap: 11px; padding: 5px 15px 16px; }
+    .file-image-card { display: flex; flex-direction: column; }
+    .file-image-card .card-header, .file-image-card .file-body, .file-image-card .file-open { flex: none; }
+    .file-thumbnail {
+      display: block; width: 100%; min-height: 0; flex: 1;
+      object-fit: contain; background: #f4f3f0; cursor: zoom-in;
+    }
+    .file-icon {
+      width: 43px; height: 47px; flex: none; display: grid; place-items: center;
+      border-radius: 10px; background: #eef0ff; color: #7063da;
+    }
+    .file-icon svg { width: 23px; height: 23px; }
+    .file-info { min-width: 0; flex: 1; }
+    .file-name { overflow: hidden; color: #414854; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .file-size { margin-top: 4px; color: #969ca5; font-size: 11px; }
+    .file-open {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      margin: 0 14px 14px; padding: 8px 11px; border: 1px solid #e8e7f5;
+      border-radius: 9px; background: #faf9ff; color: #685bd1; cursor: pointer;
+      font-size: 12px; font-weight: 600; text-decoration: none;
+    }
+    .file-open:hover { background: #f0eeff; }
+    .checklist-card { background: #eef8ef; border-color: #dceede; }
+    .checklist-card .card-header { background: #eef8ef; }
+    .checklist-title {
+      width: 100%; padding: 1px 15px 8px; border: 0; outline: 0;
+      background: transparent; color: #405345; font-size: 15px; font-weight: 650;
+    }
+    .checklist-title::placeholder { color: #8b9c8d; }
+    .check-items { display: grid; gap: 3px; padding: 0 12px 7px; }
+    .checklist-card .check-items { max-height: calc(100% - 108px); overflow: auto; }
+    .check-row { display: flex; align-items: flex-start; gap: 8px; min-height: 30px; padding: 4px 3px; }
+    .check-row input[type="checkbox"] { width: 15px; height: 15px; margin: 2px 0 0; accent-color: #68a678; cursor: pointer; }
+    .check-row input[type="text"] {
+      min-width: 0; flex: 1; padding: 0; border: 0; outline: 0;
+      background: transparent; color: #4b594e; font-size: 13px; line-height: 1.5;
+    }
+    .check-row input[type="text"].done { color: #929d94; text-decoration: line-through; }
+    .check-add {
+      display: flex; align-items: center; gap: 7px; width: calc(100% - 28px);
+      margin: 3px 14px 13px; padding: 7px 3px; border: 0; background: transparent;
+      color: #72937a; cursor: pointer; text-align: left; font-size: 12px;
+    }
+    .check-add:hover { color: #437e50; }
+    .check-add svg { width: 15px; height: 15px; }
+    .resize-grip {
+      position: absolute; z-index: 5; padding: 0; border: 0; border-radius: 5px;
+      background: #7768e8; opacity: 0; touch-action: none;
+      transition: opacity .12s;
+    }
+    .card:hover .resize-grip, .card.resizing .resize-grip, .resize-grip:focus-visible { opacity: .48; }
+    .resize-grip:hover, .card.resizing .resize-grip:hover { opacity: .95; }
+    .resize-grip.north, .resize-grip.south { left: 12px; right: 12px; height: 7px; cursor: ns-resize; }
+    .resize-grip.north { top: 0; }
+    .resize-grip.south { bottom: 0; }
+    .resize-grip.east, .resize-grip.west { top: 12px; bottom: 12px; width: 7px; cursor: ew-resize; }
+    .resize-grip.east { right: 0; }
+    .resize-grip.west { left: 0; }
+    .resize-grip.north-east, .resize-grip.south-west { width: 12px; height: 12px; cursor: nesw-resize; }
+    .resize-grip.north-east { top: 0; right: 0; }
+    .resize-grip.south-west { bottom: 0; left: 0; }
+    .resize-grip.north-west, .resize-grip.south-east { width: 12px; height: 12px; cursor: nwse-resize; }
+    .resize-grip.north-west { top: 0; left: 0; }
+    .resize-grip.south-east { right: 0; bottom: 0; }
+
+    #ink-layer { position: absolute; inset: 0; z-index: 2; width: 2600px; height: 1800px; pointer-events: none; }
+    #ink-layer.drawing { pointer-events: auto; cursor: crosshair; touch-action: none; }
+    .connections-layer { position: absolute; inset: 0; z-index: 1; width: 2600px; height: 1800px; overflow: visible; pointer-events: none; }
+    .connection-visible { fill: none; stroke: #8174df; stroke-width: 3; stroke-linecap: round; opacity: .8; }
+    .connection-hit { fill: none; stroke: transparent; stroke-width: 15; pointer-events: stroke; cursor: pointer; }
+    #ink-layer.drawing { z-index: 4; }
+    .drawing-hint {
+      position: fixed; z-index: 6; left: 50%; bottom: 24px; transform: translateX(-50%);
+      display: none; align-items: center; gap: 11px; padding: 10px 14px 10px 16px;
+      border: 1px solid #e7e3ff; border-radius: 12px; background: #fff;
+      box-shadow: 0 6px 22px #37315b20; color: #6256c8; font-size: 12px; font-weight: 600;
+    }
+    .drawing-hint.visible { display: flex; }
+    .hint-action {
+      padding: 5px 8px; border: 0; border-radius: 7px; background: #f1efff;
+      color: #6256c8; cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+    .hint-action:hover { background: #e7e4ff; }
+    .hint-action.exit-drawing { background: #7768e8; color: #fff; }
+    .hint-action.exit-drawing:hover { background: #6253d1; }
+    .link-hint {
+      position: fixed; z-index: 7; left: 50%; bottom: 24px; transform: translateX(-50%);
+      display: none; align-items: center; gap: 10px; max-width: calc(100vw - 24px);
+      padding: 10px 13px; border: 1px solid #dcd8ff; border-radius: 12px; background: #fff;
+      box-shadow: 0 6px 22px #37315b20; color: #6256c8; font-size: 12px; font-weight: 600;
+    }
+    .link-hint.visible { display: flex; }
+    .link-hint button {
+      flex: none; padding: 5px 8px; border: 0; border-radius: 7px;
+      background: #f1efff; color: #6256c8; cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+    .link-hint button:hover { background: #e7e4ff; }
+    .footer-tip {
+      position: fixed; right: 19px; bottom: 16px; z-index: 4; padding: 8px 11px;
+      border: 1px solid #eaeae4; border-radius: 9px; background: #fff;
+      color: #9399a1; font-size: 11px; pointer-events: none;
+    }
+    .zoom-controls {
+      position: fixed; right: 19px; bottom: 57px; z-index: 4;
+      display: flex; align-items: center; gap: 5px; padding: 5px;
+      border: 1px solid #eaeae4; border-radius: 12px; background: #fff;
+      box-shadow: 0 3px 13px #292d3410;
+    }
+    .zoom-button {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border: 0; border-radius: 8px; background: transparent;
+      color: #565e6b; cursor: pointer; font-size: 19px;
+    }
+    .zoom-button:hover { background: #f2f1ff; color: var(--purple-dark); }
+    .zoom-button svg { width: 17px; height: 17px; }
+    .zoom-value {
+      min-width: 49px; padding: 0 2px; color: #6d7480;
+      font-size: 12px; font-variant-numeric: tabular-nums; text-align: center;
+    }
+    .project-dialog {
+      width: min(420px, calc(100vw - 32px)); padding: 0;
+      border: 1px solid #ecebf2; border-radius: 17px; background: #fff;
+      color: var(--ink); box-shadow: 0 20px 65px #1e1d342e;
+    }
+    .project-dialog::backdrop { background: #20212a80; backdrop-filter: blur(3px); }
+    .project-dialog form { display: grid; gap: 14px; padding: 23px; }
+    .project-dialog h2 { margin: 0; font-size: 19px; letter-spacing: -.3px; }
+    .project-dialog p { margin: -7px 0 1px; color: #7d8490; font-size: 13px; line-height: 1.55; }
+    .project-name-field { display: grid; gap: 7px; color: #68707c; font-size: 12px; font-weight: 600; }
+    .project-name-field[hidden] { display: none; }
+    .project-name-field input {
+      width: 100%; padding: 11px 12px; border: 1px solid #e4e5eb; border-radius: 9px;
+      outline: none; color: #383e49; font-size: 14px;
+    }
+    .project-name-field input:focus { border-color: #a79fff; box-shadow: 0 0 0 3px #7768e81c; }
+    .project-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+    .project-dialog-actions button {
+      padding: 9px 13px; border: 1px solid #e7e8ed; border-radius: 9px;
+      background: #fff; color: #626976; cursor: pointer; font-size: 12px; font-weight: 600;
+    }
+    .project-dialog-actions button:hover { background: #f6f6f8; }
+    .project-dialog-actions .primary { border-color: #7768e8; background: #7768e8; color: #fff; }
+    .project-dialog-actions .primary:hover { background: #6253d1; }
+    .project-dialog-actions .danger { border-color: #ce5656; background: #ce5656; color: #fff; }
+    .project-dialog-actions .danger:hover { background: #b94444; }
+
+    .preview {
+      position: fixed; z-index: 10; inset: 0; display: none; align-items: center; justify-content: center;
+      padding: 32px; background: rgba(27, 29, 35, .82); cursor: zoom-out;
+    }
+    .preview.visible { display: flex; }
+    .preview img { max-width: min(100%, 1100px); max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 14px 55px #0005; }
+    .preview-close {
+      position: absolute; top: 18px; right: 20px; width: 40px; height: 40px;
+      border: 1px solid #ffffff3d; border-radius: 50%; background: #ffffff18;
+      color: white; cursor: pointer; font-size: 23px;
+    }
+    .preview-close:hover { background: #ffffff30; }
+    .file-input { display: none; }
+    .toast {
+      position: fixed; z-index: 12; left: 50%; bottom: 27px; transform: translate(-50%, 12px);
+      padding: 10px 15px; border-radius: 10px; background: #30343d; color: white;
+      box-shadow: 0 6px 20px #0002; font-size: 12px; opacity: 0; pointer-events: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 760px) {
+      body { overflow: hidden; }
+      .topbar { min-height: 115px; flex-wrap: wrap; gap: 4px; padding: 10px 14px 9px; }
+      .brand-group { order: 0; width: 100%; justify-content: space-between; gap: 8px; }
+      .brand { min-width: 0; flex: 1; }
+      .project-trigger { max-width: 155px; min-height: 35px; padding: 0 8px; font-size: 11px; }
+      .project-menu { left: auto; right: 0; }
+      .brand-mark { width: 35px; height: 35px; }
+      .saved-state { min-width: 0; font-size: 11px; }
+      .tools { order: 2; flex-basis: 100%; justify-content: space-between; gap: 2px; }
+      .tool { min-width: 48px; min-height: 40px; flex-direction: column; gap: 2px; padding: 3px 5px; font-size: 9px; }
+      .tool svg { width: 17px; height: 17px; }
+      .footer-tip { display: none; }
+      .zoom-controls { right: 12px; bottom: 16px; }
+      .link-hint, .drawing-hint { bottom: 72px; flex-wrap: wrap; justify-content: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand-group">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 8h8M8 12h5M8 16h8"/></svg>
+          </div>
+          <div><h1>Бяла дъска</h1><p>Твоето място за идеи</p></div>
+        </div>
+        <div class="project-picker" id="project-picker">
+          <button class="project-trigger" id="project-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 9h18"/></svg>
+            <span class="project-trigger-name" id="active-project-name">Зареждане…</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"/></svg>
+          </button>
+          <div class="project-menu" id="project-menu" hidden>
+            <div class="project-menu-heading"><span>Моите проекти</span><span id="project-count">0</span></div>
+            <button class="project-new" id="project-new" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Създай нов проект</button>
+            <div class="project-list" id="project-list"></div>
+          </div>
+        </div>
+      </div>
+      <nav class="tools" aria-label="Инструменти">
+        <button class="tool" id="add-text" type="button" title="Добави текстова бележка">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6V4h16v2M12 4v16M8 20h8"/></svg><span>Текст</span>
+        </button>
+        <button class="tool" id="add-image" type="button" title="Качи снимка">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg><span>Снимка</span>
+        </button>
+        <button class="tool" id="add-file" type="button" title="Качи файл">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z"/><path d="M13 3v7h7M12 17v-5m-2.5 2.5L12 12l2.5 2.5"/></svg><span>Файл</span>
+        </button>
+        <button class="tool" id="add-checklist" type="button" title="Добави списък">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 2 2 4-4M13 7h7M4 16l2 2 4-4M13 16h7"/></svg><span>Списък</span>
+        </button>
+        <button class="tool" id="toggle-draw" type="button" title="Рисувай със свободна линия" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="m14.5 6.5 3 3M4 20h16"/></svg><span>Рисуване</span>
+        </button>
+      </nav>
+      <div class="saved-state" id="saved-state" role="status" aria-live="polite"><span class="dot"></span><span id="saved-label">Локално запазване</span></div>
+    </header>
+
+    <section class="board-scroll" id="board-scroll" aria-label="Бяла дъска">
+      <div class="board-space" id="board-space">
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 8h8M8 12h5M8 16h8"/></svg></div>
+          <strong>Дъската ти е готова</strong>
+          <span>Избери инструмент и започни да подреждаш идеите си.</span>
+        </div>
+        <div class="board" id="board">
+          <svg class="connections-layer" id="connections-layer" viewBox="0 0 2600 1800" role="img" aria-label="Връзки между бележките">
+            <defs><marker id="connection-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#8174df"/></marker></defs>
+            <g id="connection-lines"></g>
+          </svg>
+          <canvas id="ink-layer" aria-label="Поле за рисуване"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="zoom-controls" aria-label="Мащаб на дъската">
+    <button class="zoom-button" id="zoom-out" type="button" title="Намали мащаба" aria-label="Намали мащаба">−</button>
+    <span class="zoom-value" id="zoom-value" aria-live="polite">100%</span>
+    <button class="zoom-button" id="zoom-in" type="button" title="Увеличи мащаба" aria-label="Увеличи мащаба">+</button>
+    <button class="zoom-button" id="zoom-reset" type="button" title="Върни мащаба на 100%" aria-label="Върни мащаба на 100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18 6l2 6M4 12v5h5"/><path d="M4 17a7.5 7.5 0 0 0 13.1 3"/></svg></button>
+  </div>
+  <input class="file-input" id="image-input" type="file" accept="image/*">
+  <input class="file-input" id="file-input" type="file">
+  <div class="drawing-hint" id="drawing-hint">
+    <span>Режим рисуване — начертай свободна линия</span>
+    <button class="hint-action" id="undo-stroke" type="button">Отмени последната</button>
+    <button class="hint-action" id="draw-connect" type="button" title="Свържи снимка с бележка или списък">Свържи</button>
+    <button class="hint-action exit-drawing" id="finish-drawing" type="button" title="Излез от режима за рисуване (Esc)">Изход от рисуване</button>
+  </div>
+  <div class="link-hint" id="link-hint" role="status" aria-live="polite">
+    <span id="link-hint-label">Избери снимка и после текст или списък, за да ги свържеш.</span>
+    <button id="cancel-link" type="button">Откажи</button>
+  </div>
+  <div class="footer-tip">Колелце: увеличение · Shift + колелце: местене · Плъзни бележка за местене, хвани ръб за размер</div>
+  <div class="preview" id="preview" role="dialog" aria-modal="true" aria-label="Преглед на снимка">
+    <button class="preview-close" id="preview-close" type="button" aria-label="Затвори преглед">×</button>
+    <img id="preview-image" alt="Преглед на снимка">
+  </div>
+  <dialog class="project-dialog" id="project-dialog" aria-labelledby="project-dialog-title">
+    <form id="project-form">
+      <h2 id="project-dialog-title">Нов проект</h2>
+      <p id="project-dialog-description">Създай отделна дъска за друга тема. Проектите се запазват локално.</p>
+      <label class="project-name-field" id="project-name-field" for="project-name">
+        Име на проекта
+        <input id="project-name" name="projectName" type="text" maxlength="80" autocomplete="off" placeholder="Например: Пътуване">
+      </label>
+      <div class="project-dialog-actions">
+        <button id="project-dialog-cancel" type="button">Отказ</button>
+        <button class="primary" id="project-dialog-submit" type="submit">Създай проект</button>
+      </div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const BOARD_WIDTH = 2600;
+      const BOARD_HEIGHT = 1800;
+      const MIN_ZOOM = 0.35;
+      const MAX_ZOOM = 2.5;
+      const DB_NAME = "byala-daska-local";
+      const DB_VERSION = 1;
+      const STORE_NAME = "workspace";
+      const LEGACY_STATE_KEY = "board";
+      const PROJECT_INDEX_KEY = "project-index";
+      const DEFAULT_PROJECT_NAME = "Моят проект";
+
+      const board = document.getElementById("board");
+      const boardSpace = document.getElementById("board-space");
+      const boardScroll = document.getElementById("board-scroll");
+      const zoomValue = document.getElementById("zoom-value");
+      const canvas = document.getElementById("ink-layer");
+      const context = canvas.getContext("2d");
+      const connectionLines = document.getElementById("connection-lines");
+      const savedState = document.getElementById("saved-state");
+      const savedLabel = document.getElementById("saved-label");
+      const welcome = document.getElementById("welcome");
+      const drawingHint = document.getElementById("drawing-hint");
+      const preview = document.getElementById("preview");
+      const previewImage = document.getElementById("preview-image");
+      const toast = document.getElementById("toast");
+      const imageInput = document.getElementById("image-input");
+      const fileInput = document.getElementById("file-input");
+      const projectPicker = document.getElementById("project-picker");
+      const projectTrigger = document.getElementById("project-trigger");
+      const projectMenu = document.getElementById("project-menu");
+      const projectList = document.getElementById("project-list");
+      const projectDialog = document.getElementById("project-dialog");
+      const projectForm = document.getElementById("project-form");
+      const projectName = document.getElementById("project-name");
+      const toolButtons = [...document.querySelectorAll(".tool")];
+      const objectUrls = new Map();
+      let database;
+      let items = [];
+      let strokes = [];
+      let connections = [];
+      let projectIndex = { activeId: "", projects: [] };
+      let activeProjectId = "";
+      let projectDialogMode = "create";
+      let dialogProjectId = "";
+      let activeLinkSourceId = "";
+      let pickingLinkSource = false;
+      let resumeDrawingAfterLink = false;
+      let zoom = 1;
+      let drawing = false;
+      let currentStroke = null;
+      let toastTimer;
+      let saveTimer;
+      let saveQueue = Promise.resolve();
+
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          if (!("indexedDB" in window)) {
+            reject(new Error("Браузърът не поддържа локална база данни."));
+            return;
+          }
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(STORE_NAME)) {
+              request.result.createObjectStore(STORE_NAME);
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error("Локалната база данни не може да бъде отворена."));
+          request.onblocked = () => reject(new Error("Затвори друг отворен прозорец на приложението и опитай отново."));
+        });
+      }
+
+      function readEntry(key) {
+        return new Promise((resolve, reject) => {
+          const transaction = database.transaction(STORE_NAME, "readonly");
+          const request = transaction.objectStore(STORE_NAME).get(key);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error("Запазените данни не могат да бъдат прочетени."));
+        });
+      }
+
+      function writeEntries(entries, removeKeys = []) {
+        return new Promise((resolve, reject) => {
+          const transaction = database.transaction(STORE_NAME, "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+          entries.forEach(([key, value]) => store.put(value, key));
+          removeKeys.forEach((key) => store.delete(key));
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error || new Error("Промените не могат да бъдат запазени."));
+          transaction.onabort = () => reject(transaction.error || new Error("Запазването е прекъснато."));
+        });
+      }
+
+      function projectStateKey(projectId) {
+        return `project:${projectId}`;
+      }
+
+      function persistState() {
+        if (!database) return Promise.reject(new Error("Локалната база данни не е готова."));
+        if (!activeProjectId) return Promise.reject(new Error("Не е избран активен проект."));
+        const projectId = activeProjectId;
+        const snapshot = {
+          items: items.map((item) => ({ ...item })),
+          strokes: strokes.map((stroke) => ({ ...stroke, points: stroke.points.map((point) => ({ ...point })) })),
+          connections: connections.map((connection) => ({ ...connection })),
+          zoom
+        };
+        const updatedAt = new Date().toISOString();
+        const nextIndex = {
+          ...projectIndex,
+          projects: projectIndex.projects.map((project) => project.id === projectId ? { ...project, updatedAt } : project)
+        };
+        projectIndex = nextIndex;
+        saveQueue = saveQueue.then(() => new Promise((resolve, reject) => {
+          const transaction = database.transaction(STORE_NAME, "readwrite");
+          transaction.objectStore(STORE_NAME).put(snapshot, projectStateKey(projectId));
+          transaction.objectStore(STORE_NAME).put(nextIndex, PROJECT_INDEX_KEY);
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error || new Error("Промените не могат да бъдат запазени."));
+          transaction.onabort = () => reject(transaction.error || new Error("Запазването е прекъснато."));
+        }));
+        renderProjectMenu();
+        return saveQueue;
+      }
+
+      function updateBoardSpace() {
+        const spaceWidth = Math.max(BOARD_WIDTH * zoom, boardScroll.clientWidth);
+        const spaceHeight = Math.max(BOARD_HEIGHT * zoom, boardScroll.clientHeight);
+        boardSpace.style.width = `${spaceWidth}px`;
+        boardSpace.style.height = `${spaceHeight}px`;
+        boardSpace.style.backgroundSize = `${24 * zoom}px ${24 * zoom}px`;
+        board.style.transform = `scale(${zoom})`;
+        board.style.left = `${Math.max(0, (spaceWidth - BOARD_WIDTH * zoom) / 2)}px`;
+        board.style.top = `${Math.max(0, (spaceHeight - BOARD_HEIGHT * zoom) / 2)}px`;
+        boardSpace.style.backgroundPosition = `${8 * zoom + board.offsetLeft}px ${8 * zoom + board.offsetTop}px`;
+        zoomValue.textContent = `${Math.round(zoom * 100)}%`;
+      }
+
+      function requestSave() {
+        savedState.classList.remove("error");
+        savedState.classList.add("saving");
+        savedLabel.textContent = "Запазване…";
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(() => {
+          persistState().then(() => {
+            savedState.classList.remove("saving", "error");
+            savedLabel.textContent = "Запазено локално";
+          }).catch((error) => {
+            savedState.classList.remove("saving");
+            savedState.classList.add("error");
+            savedLabel.textContent = "Грешка при запазване";
+            console.error(error);
+            showToast("Промяната не беше запазена. Провери свободното място в браузъра.");
+          });
+        }, 250);
+      }
+
+      function makeId() {
+        return window.crypto && typeof window.crypto.randomUUID === "function"
+          ? window.crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2800);
+      }
+
+      function toggleProjectMenu(open = projectMenu.hidden) {
+        projectMenu.hidden = !open;
+        projectPicker.classList.toggle("open", open);
+        projectTrigger.setAttribute("aria-expanded", String(open));
+      }
+
+      function renderProjectMenu() {
+        if (!projectIndex.projects) return;
+        const activeProject = projectIndex.projects.find((project) => project.id === activeProjectId);
+        document.getElementById("active-project-name").textContent = activeProject?.name || "Проекти";
+        document.getElementById("project-count").textContent = String(projectIndex.projects.length);
+        projectList.replaceChildren();
+        if (projectIndex.projects.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "project-empty";
+          empty.textContent = "Още няма запазени проекти.";
+          projectList.append(empty);
+          return;
+        }
+        [...projectIndex.projects].sort((first, second) => (second.updatedAt || "").localeCompare(first.updatedAt || "")).forEach((project) => {
+          const row = document.createElement("div");
+          row.className = `project-row${project.id === activeProjectId ? " active" : ""}`;
+          row.innerHTML = `<button class="project-open" type="button" title="${escapeHtml(project.name)}">${escapeHtml(project.name)}</button><button class="project-action rename" type="button" title="Преименувай проекта" aria-label="Преименувай ${escapeHtml(project.name)}">${projectIcon("rename")}</button><button class="project-action delete" type="button" title="Изтрий проекта" aria-label="Изтрий ${escapeHtml(project.name)}"${projectIndex.projects.length <= 1 ? " disabled" : ""}>${projectIcon("delete")}</button>`;
+          row.querySelector(".project-open").addEventListener("click", () => {
+            if (project.id === activeProjectId) {
+              toggleProjectMenu(false);
+              return;
+            }
+            switchProject(project.id);
+          });
+          row.querySelector(".rename").addEventListener("click", () => openProjectDialog("rename", project.id));
+          row.querySelector(".delete").addEventListener("click", () => {
+            if (!row.querySelector(".delete").disabled) openProjectDialog("delete", project.id);
+          });
+          projectList.append(row);
+        });
+      }
+
+      function projectIcon(name) {
+        if (name === "rename") {
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16z"/></svg>';
+        }
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>';
+      }
+
+      function openProjectDialog(mode, projectId = "") {
+        projectDialogMode = mode;
+        dialogProjectId = projectId;
+        const project = projectIndex.projects.find((entry) => entry.id === projectId);
+        const title = document.getElementById("project-dialog-title");
+        const description = document.getElementById("project-dialog-description");
+        const nameField = document.getElementById("project-name-field");
+        const submit = document.getElementById("project-dialog-submit");
+        toggleProjectMenu(false);
+        nameField.hidden = mode === "delete";
+        submit.classList.toggle("danger", mode === "delete");
+        if (mode === "create") {
+          title.textContent = "Нов проект";
+          description.textContent = "Създай отделна дъска за друга тема. Проектите се запазват локално.";
+          submit.textContent = "Създай проект";
+          projectName.value = "";
+        } else if (mode === "rename") {
+          title.textContent = "Преименувай проект";
+          description.textContent = "Промяната важи само за името; съдържанието на проекта се запазва.";
+          submit.textContent = "Запази името";
+          projectName.value = project?.name || "";
+        } else {
+          title.textContent = "Изтрий проект";
+          description.textContent = `Проектът „${project?.name || ""}“ и съдържанието в него ще бъдат изтрити окончателно.`;
+          submit.textContent = "Изтрий проекта";
+        }
+        projectDialog.showModal();
+        if (mode !== "delete") {
+          projectName.focus();
+          projectName.select();
+        } else {
+          submit.focus();
+        }
+      }
+
+      function closeProjectDialog() {
+        if (projectDialog.open) projectDialog.close();
+      }
+
+      async function flushCurrentProject() {
+        window.clearTimeout(saveTimer);
+        if (!database || !activeProjectId) return;
+        await persistState();
+        savedState.classList.remove("saving", "error");
+        savedLabel.textContent = "Запазено локално";
+      }
+
+      async function loadProject(projectId) {
+        const project = projectIndex.projects.find((entry) => entry.id === projectId);
+        if (!project) throw new Error("Избраният проект не съществува.");
+        let state = await readEntry(projectStateKey(projectId));
+        if (!state && projectIndex.projects.length === 1) {
+          state = await readEntry(LEGACY_STATE_KEY);
+          if (state) await writeEntries([[projectStateKey(projectId), state]]);
+        }
+        activeProjectId = projectId;
+        items = Array.isArray(state?.items) ? state.items : [];
+        strokes = Array.isArray(state?.strokes) ? state.strokes : [];
+        connections = Array.isArray(state?.connections) ? state.connections : [];
+        if (!Array.isArray(state?.connections)) {
+          await writeEntries([[projectStateKey(projectId), {
+            ...(state || { items, strokes, zoom }),
+            connections
+          }]]);
+        }
+        const savedZoom = Number.isFinite(state?.zoom) ? state.zoom : 1;
+        setZoom(savedZoom, undefined, undefined, false);
+        setLinkMode(null);
+        objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        objectUrls.clear();
+        renderAll();
+        updateBoardSpace();
+        configureCanvas();
+        boardScroll.scrollLeft = Math.max(0, (boardSpace.clientWidth - boardScroll.clientWidth) / 2);
+        boardScroll.scrollTop = Math.max(0, (boardSpace.clientHeight - boardScroll.clientHeight) / 2);
+        savedState.classList.remove("saving", "error");
+        savedLabel.textContent = "Запазено локално";
+        renderProjectMenu();
+      }
+
+      async function switchProject(projectId) {
+        if (projectId === activeProjectId) {
+          toggleProjectMenu(false);
+          return;
+        }
+        try {
+          await flushCurrentProject();
+          const nextIndex = { ...projectIndex, activeId: projectId };
+          await writeEntries([[PROJECT_INDEX_KEY, nextIndex]]);
+          projectIndex = nextIndex;
+          await loadProject(projectId);
+          toggleProjectMenu(false);
+        } catch (error) {
+          console.error(error);
+          showToast("Проектът не можа да се отвори. Запазените данни са непокътнати.");
+        }
+      }
+
+      async function createProject(name) {
+        const cleanName = name.trim();
+        if (!cleanName) {
+          projectName.setCustomValidity("Въведи име на проекта.");
+          projectName.reportValidity();
+          return false;
+        }
+        if (projectIndex.projects.some((project) => project.name.toLocaleLowerCase("bg") === cleanName.toLocaleLowerCase("bg"))) {
+          projectName.setCustomValidity("Вече има проект с това име.");
+          projectName.reportValidity();
+          return false;
+        }
+        try {
+          await flushCurrentProject();
+          const now = new Date().toISOString();
+          const project = { id: makeId(), name: cleanName, createdAt: now, updatedAt: now };
+          const nextIndex = { activeId: project.id, projects: [...projectIndex.projects, project] };
+          await writeEntries([[PROJECT_INDEX_KEY, nextIndex], [projectStateKey(project.id), { items: [], strokes: [], connections: [], zoom: 1 }]]);
+          projectIndex = nextIndex;
+          await loadProject(project.id);
+          closeProjectDialog();
+          showToast(`Създаден е проект „${cleanName}“.`);
+          return true;
+        } catch (error) {
+          console.error(error);
+          showToast("Новият проект не можа да бъде създаден.");
+          return false;
+        }
+      }
+
+      async function renameProject(projectId, name) {
+        const cleanName = name.trim();
+        const current = projectIndex.projects.find((project) => project.id === projectId);
+        if (!current) throw new Error("Проектът за преименуване не съществува.");
+        if (!cleanName) {
+          projectName.setCustomValidity("Въведи име на проекта.");
+          projectName.reportValidity();
+          return false;
+        }
+        if (projectIndex.projects.some((project) => project.id !== projectId && project.name.toLocaleLowerCase("bg") === cleanName.toLocaleLowerCase("bg"))) {
+          projectName.setCustomValidity("Вече има проект с това име.");
+          projectName.reportValidity();
+          return false;
+        }
+        const nextIndex = {
+          ...projectIndex,
+          projects: projectIndex.projects.map((project) => project.id === projectId
+            ? { ...project, name: cleanName, updatedAt: new Date().toISOString() }
+            : project)
+        };
+        await writeEntries([[PROJECT_INDEX_KEY, nextIndex]]);
+        projectIndex = nextIndex;
+        renderProjectMenu();
+        closeProjectDialog();
+        return true;
+      }
+
+      async function deleteProject(projectId) {
+        const project = projectIndex.projects.find((entry) => entry.id === projectId);
+        if (!project) throw new Error("Проектът за изтриване не съществува.");
+        if (projectIndex.projects.length <= 1) {
+          showToast("Последният проект не може да бъде изтрит.");
+          return false;
+        }
+        await flushCurrentProject();
+        const remaining = projectIndex.projects.filter((entry) => entry.id !== projectId);
+        const nextActiveId = projectId === activeProjectId ? remaining[0].id : activeProjectId;
+        const nextIndex = { activeId: nextActiveId, projects: remaining };
+        await writeEntries([[PROJECT_INDEX_KEY, nextIndex]], [projectStateKey(projectId)]);
+        projectIndex = nextIndex;
+        if (projectId === activeProjectId) await loadProject(nextActiveId);
+        else renderProjectMenu();
+        closeProjectDialog();
+        showToast(`Изтрит е проектът „${project.name}“.`);
+        return true;
+      }
+
+      async function submitProjectDialog(event) {
+        event.preventDefault();
+        projectName.setCustomValidity("");
+        let completed = false;
+        try {
+          if (projectDialogMode === "create") completed = await createProject(projectName.value);
+          else if (projectDialogMode === "rename") completed = await renameProject(dialogProjectId, projectName.value);
+          else if (projectDialogMode === "delete") completed = await deleteProject(dialogProjectId);
+        } catch (error) {
+          console.error(error);
+          showToast("Промяната по проекта не бе приложена. Данните са запазени.");
+        }
+        return completed;
+      }
+
+      function setZoom(requestedZoom, clientX, clientY, save = true) {
+        const previousZoom = zoom;
+        const nextZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requestedZoom));
+        const bounds = boardScroll.getBoundingClientRect();
+        const anchorX = clientX === undefined ? boardScroll.clientWidth / 2 : clientX - bounds.left;
+        const anchorY = clientY === undefined ? boardScroll.clientHeight / 2 : clientY - bounds.top;
+        if (Math.abs(nextZoom - previousZoom) < 0.001) {
+          updateBoardSpace();
+          return;
+        }
+
+        const boardX = (boardScroll.scrollLeft + anchorX - board.offsetLeft) / previousZoom;
+        const boardY = (boardScroll.scrollTop + anchorY - board.offsetTop) / previousZoom;
+
+        zoom = nextZoom;
+        updateBoardSpace();
+        boardScroll.scrollLeft = board.offsetLeft + boardX * zoom - anchorX;
+        boardScroll.scrollTop = board.offsetTop + boardY * zoom - anchorY;
+        if (save && database) requestSave();
+      }
+
+      function centerPosition(width, height) {
+        const visibleX = (boardScroll.scrollLeft + boardScroll.clientWidth / 2 - board.offsetLeft) / zoom;
+        const visibleY = (boardScroll.scrollTop + boardScroll.clientHeight / 2 - board.offsetTop) / zoom;
+        const offset = (items.length % 8) * 24;
+        return {
+          x: Math.max(20, Math.min(BOARD_WIDTH - width - 20, visibleX - width / 2 + offset)),
+          y: Math.max(20, Math.min(BOARD_HEIGHT - height - 20, visibleY - height / 2 + offset))
+        };
+      }
+
+      function icon(name) {
+        const icons = {
+          drag: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="7" r="1.3"/><circle cx="16" cy="7" r="1.3"/><circle cx="8" cy="12" r="1.3"/><circle cx="16" cy="12" r="1.3"/><circle cx="8" cy="17" r="1.3"/><circle cx="16" cy="17" r="1.3"/></svg>',
+          delete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>',
+          plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+        };
+        return icons[name];
+      }
+
+      function cardHeader(item, label, extraActions = "") {
+        return `<div class="card-header" data-drag-handle><span class="card-kind">${label}</span><div class="card-actions"><span class="icon-button" aria-hidden="true">${icon("drag")}</span>${extraActions}<button class="icon-button delete" type="button" data-delete="${escapeHtml(item.id)}" aria-label="Изтрий ${label.toLowerCase()}">${icon("delete")}</button></div></div>`;
+      }
+
+      function attachmentUrl(item) {
+        if (!item.blob) return "";
+        if (!objectUrls.has(item.id)) objectUrls.set(item.id, URL.createObjectURL(item.blob));
+        return objectUrls.get(item.id);
+      }
+
+      function isImageFile(item) {
+        const mime = item.mime || item.blob?.type || (item.type && item.type.startsWith("image/") ? item.type : "");
+        return mime.startsWith("image/") || /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|tiff?|webp)$/i.test(item.name || "");
+      }
+
+      function isImageItem(item) {
+        return item.type === "image" || (item.type === "file" && isImageFile(item));
+      }
+
+      function canLinkItems(first, second) {
+        if (!first || !second || first.id === second.id) return false;
+        const firstIsImage = isImageItem(first);
+        const secondIsImage = isImageItem(second);
+        const firstIsNote = first.type === "text" || first.type === "checklist";
+        const secondIsNote = second.type === "text" || second.type === "checklist";
+        return (firstIsImage && secondIsNote) || (secondIsImage && firstIsNote);
+      }
+
+      function connectionExists(firstId, secondId) {
+        return connections.some((connection) =>
+          (connection.from === firstId && connection.to === secondId) ||
+          (connection.from === secondId && connection.to === firstId));
+      }
+
+      function renderConnections() {
+        connectionLines.replaceChildren();
+        connections = connections.filter((connection) =>
+          items.some((item) => item.id === connection.from) && items.some((item) => item.id === connection.to));
+        connections.forEach((connection) => {
+          const from = items.find((item) => item.id === connection.from);
+          const to = items.find((item) => item.id === connection.to);
+          if (!canLinkItems(from, to)) return;
+          const fromX = from.x + (from.width || 286) / 2;
+          const fromY = from.y + (from.height || 175) / 2;
+          const toX = to.x + (to.width || 286) / 2;
+          const toY = to.y + (to.height || 175) / 2;
+          const bend = Math.max(55, Math.abs(toX - fromX) * 0.4);
+          const direction = toX >= fromX ? 1 : -1;
+          const path = `M ${fromX} ${fromY} C ${fromX + bend * direction} ${fromY}, ${toX - bend * direction} ${toY}, ${toX} ${toY}`;
+          const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+          title.textContent = "Натисни, за да премахнеш връзката";
+          const visible = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          visible.setAttribute("d", path);
+          visible.setAttribute("class", "connection-visible");
+          visible.setAttribute("marker-end", "url(#connection-arrow)");
+          const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          hit.setAttribute("d", path);
+          hit.setAttribute("class", "connection-hit");
+          hit.setAttribute("role", "button");
+          hit.setAttribute("aria-label", `Премахни връзката`);
+          hit.addEventListener("click", () => {
+            connections = connections.filter((entry) => entry.id !== connection.id);
+            renderConnections();
+            requestSave();
+            showToast("Връзката е премахната.");
+          });
+          group.append(title, visible, hit);
+          connectionLines.append(group);
+        });
+      }
+
+      function updateLinkCards() {
+        board.querySelectorAll(".card").forEach((card) => {
+          const item = items.find((entry) => entry.id === card.dataset.id);
+          card.classList.toggle("link-source", Boolean(item && item.id === activeLinkSourceId));
+          const source = items.find((entry) => entry.id === activeLinkSourceId);
+          const selectable = pickingLinkSource
+            ? Boolean(item && (isImageItem(item) || item.type === "text" || item.type === "checklist"))
+            : Boolean(item && activeLinkSourceId && item.id !== activeLinkSourceId && canLinkItems(source, item));
+          card.classList.toggle("link-target", selectable);
+          const button = card.querySelector("[data-link]");
+          if (button) button.classList.toggle("active", item?.id === activeLinkSourceId);
+        });
+      }
+
+      function setLinkMode(sourceId) {
+        activeLinkSourceId = sourceId || "";
+        document.getElementById("link-hint").classList.toggle("visible", Boolean(activeLinkSourceId || pickingLinkSource));
+        const source = items.find((item) => item.id === activeLinkSourceId);
+        document.getElementById("link-hint-label").textContent = pickingLinkSource
+          ? "Избери снимка, бележка или списък, който да свържеш."
+          : source && isImageItem(source)
+            ? "Избери текстова бележка или списък, към който да свържеш снимката."
+            : "Избери снимка, която да свържеш с тази бележка или списък.";
+        updateLinkCards();
+      }
+
+      function cancelLinkMode() {
+        const resumeDrawing = resumeDrawingAfterLink;
+        activeLinkSourceId = "";
+        pickingLinkSource = false;
+        resumeDrawingAfterLink = false;
+        setLinkMode(null);
+        if (resumeDrawing) setDrawingMode(true);
+      }
+
+      function beginLinkSelectionFromDrawing() {
+        resumeDrawingAfterLink = drawing;
+        setDrawingMode(false);
+        pickingLinkSource = true;
+        setLinkMode(null);
+      }
+
+      function startLinkMode(itemId) {
+        if (activeLinkSourceId === itemId) {
+          cancelLinkMode();
+          return;
+        }
+        const source = items.find((item) => item.id === itemId);
+        if (!source) return;
+        pickingLinkSource = false;
+        resumeDrawingAfterLink = false;
+        setDrawingMode(false);
+        setLinkMode(itemId);
+      }
+
+      function completeLinkMode(targetId) {
+        if (!activeLinkSourceId) return;
+        const sourceId = activeLinkSourceId;
+        const source = items.find((item) => item.id === sourceId);
+        const target = items.find((item) => item.id === targetId);
+        if (!target || target.id === sourceId) {
+          showToast(target?.id === sourceId ? "Избери друга карта." : "Избери карта за свързване.");
+          return;
+        }
+        if (!canLinkItems(source, target)) {
+          showToast("Свържи снимка с текстова бележка или списък.");
+          return;
+        }
+        if (connectionExists(sourceId, targetId)) {
+          connections = connections.filter((connection) =>
+            !((connection.from === sourceId && connection.to === targetId) ||
+              (connection.from === targetId && connection.to === sourceId)));
+          showToast("Връзката е премахната.");
+        } else {
+          connections.push({ id: makeId(), from: sourceId, to: targetId });
+          showToast("Снимката и бележката са свързани.");
+        }
+        const resumeDrawing = resumeDrawingAfterLink;
+        resumeDrawingAfterLink = false;
+        pickingLinkSource = false;
+        setLinkMode(null);
+        renderConnections();
+        requestSave();
+        if (resumeDrawing) setDrawingMode(true);
+      }
+
+      function renderItem(item) {
+        const element = document.createElement("article");
+        element.className = `card ${item.type}-card`;
+        if (item.type === "file" && isImageFile(item)) element.classList.add("file-image-card");
+        element.dataset.id = item.id;
+        element.style.left = `${item.x}px`;
+        element.style.top = `${item.y}px`;
+        const imageAttachment = item.type === "image" || (item.type === "file" && isImageFile(item));
+        if (item.type === "file" && imageAttachment && item.width === 286 && item.height === 175) {
+          item.width = 300;
+          item.height = 260;
+          requestSave();
+        }
+        element.style.width = `${item.width || (imageAttachment ? 300 : 286)}px`;
+        element.style.height = `${item.height || (item.type === "checklist" ? 205 : imageAttachment ? 260 : 175)}px`;
+
+        if (item.type === "text") {
+          const fontControls = '<button class="font-size-control" type="button" data-font-step="-2" title="Намали размера на текста" aria-label="Намали размера на текста">A−</button><button class="font-size-control" type="button" data-font-step="2" title="Увеличи размера на текста" aria-label="Увеличи размера на текста">A+</button>';
+          const linkControl = '<button class="link-button" type="button" data-link title="Свържи с качена снимка" aria-label="Свържи бележката със снимка"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1.1l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1-.1l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>';
+          element.innerHTML = `${cardHeader(item, "Текст", fontControls + linkControl)}<textarea aria-label="Текстова бележка" placeholder="Напиши нещо..." spellcheck="true">${escapeHtml(item.text || "")}</textarea>`;
+          const textarea = element.querySelector("textarea");
+          item.fontSize = Math.max(10, Math.min(32, item.fontSize || 14));
+          textarea.style.fontSize = `${item.fontSize}px`;
+          textarea.addEventListener("input", () => {
+            item.text = textarea.value;
+            requestSave();
+          });
+          element.querySelectorAll("[data-font-step]").forEach((button) => {
+            button.addEventListener("click", () => {
+              item.fontSize = Math.max(10, Math.min(32, item.fontSize + Number(button.dataset.fontStep)));
+              textarea.style.fontSize = `${item.fontSize}px`;
+              requestSave();
+            });
+          });
+        } else if (item.type === "image") {
+          const linkControl = '<button class="link-button" type="button" data-link title="Свържи с бележка или списък" aria-label="Свържи снимката с бележка или списък"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1.1l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1-.1l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>';
+          element.innerHTML = `${cardHeader(item, "Снимка", linkControl)}<img alt="${escapeHtml(item.name || "Качена снимка")}"><div class="image-caption">${escapeHtml(item.name || "Снимка")}</div>`;
+          const image = element.querySelector("img");
+          image.src = attachmentUrl(item);
+          image.addEventListener("click", () => openPreview(image.src));
+        } else if (item.type === "file") {
+          const url = attachmentUrl(item);
+          const imagePreview = isImageFile(item) ? `<img class="file-thumbnail" alt="${escapeHtml(item.name || "Качена снимка")}">` : "";
+          const linkControl = isImageFile(item) ? '<button class="link-button" type="button" data-link title="Свържи с бележка или списък" aria-label="Свържи снимката с бележка или списък"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1.1l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1-.1l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>' : "";
+          element.innerHTML = `${cardHeader(item, isImageFile(item) ? "Снимка · файл" : "Файл", linkControl)}${imagePreview}<div class="file-body"><div class="file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z"/><path d="M13 3v7h7"/></svg></div><div class="file-info"><div class="file-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="file-size">${formatBytes(item.size || 0)}</div></div></div><a class="file-open" href="${url}" download="${escapeHtml(item.name)}" target="_blank" rel="noopener">Отвори или изтегли ↗</a>`;
+          if (imagePreview) {
+            const thumbnail = element.querySelector(".file-thumbnail");
+            thumbnail.src = url;
+            thumbnail.addEventListener("click", () => openPreview(thumbnail.src));
+          }
+        } else if (item.type === "checklist") {
+          const linkControl = '<button class="link-button" type="button" data-link title="Свържи с качена снимка" aria-label="Свържи списъка със снимка"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1.1l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1-.1l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>';
+          element.innerHTML = `${cardHeader(item, "Списък", linkControl)}<input class="checklist-title" type="text" aria-label="Заглавие на списъка" placeholder="Заглавие на списъка" value="${escapeHtml(item.title || "")}"><div class="check-items"></div><button class="check-add" type="button">${icon("plus")}Добави задача</button>`;
+          const title = element.querySelector(".checklist-title");
+          title.addEventListener("input", () => { item.title = title.value; requestSave(); });
+          const rows = element.querySelector(".check-items");
+          (item.tasks || []).forEach((task, index) => {
+            const row = document.createElement("label");
+            row.className = "check-row";
+            row.innerHTML = `<input type="checkbox" aria-label="Отметни задачата" ${task.done ? "checked" : ""}><input type="text" aria-label="Задача" value="${escapeHtml(task.text)}" placeholder="Нова задача"><button class="icon-button delete-task" type="button" aria-label="Изтрий задача">${icon("delete")}</button>`;
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            const text = row.querySelector('input[type="text"]');
+            const remove = row.querySelector(".delete-task");
+            text.classList.toggle("done", Boolean(task.done));
+            checkbox.addEventListener("change", () => {
+              task.done = checkbox.checked;
+              text.classList.toggle("done", task.done);
+              requestSave();
+            });
+            text.addEventListener("input", () => { task.text = text.value; requestSave(); });
+            remove.addEventListener("click", () => {
+              item.tasks.splice(index, 1);
+              renderAll();
+              requestSave();
+            });
+            rows.append(row);
+          });
+          element.querySelector(".check-add").addEventListener("click", () => {
+            item.tasks.push({ text: "", done: false });
+            renderAll();
+            requestSave();
+            const textInputs = element.querySelectorAll('.check-row input[type="text"]');
+            textInputs[textInputs.length - 1]?.focus();
+          });
+        }
+
+        const resizeDirections = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+        resizeDirections.forEach((direction) => {
+          const grip = document.createElement("button");
+          grip.className = `resize-grip ${direction}`;
+          grip.type = "button";
+          grip.dataset.resize = direction;
+          grip.setAttribute("aria-label", `Преоразмери ${labelForType(item.type)} от ${resizeLabel(direction)}`);
+          grip.title = `Плъзни, за да промениш размера`;
+          element.append(grip);
+          grip.addEventListener("pointerdown", (event) => startResizing(event, element, item, direction));
+          grip.addEventListener("click", (event) => event.stopPropagation());
+        });
+
+        element.querySelector(`[data-delete="${CSS.escape(item.id)}"]`).addEventListener("click", (event) => {
+          event.stopPropagation();
+          removeItem(item.id);
+        });
+        element.querySelector("[data-link]")?.addEventListener("click", (event) => {
+          event.stopPropagation();
+          startLinkMode(item.id);
+        });
+        element.addEventListener("pointerdown", (event) => {
+          if (!event.target.closest("[data-drag-handle]") || event.target.closest("button")) return;
+          startDragging(event, element, item);
+        });
+        return element;
+      }
+
+      function labelForType(type) {
+        return { text: "текстовата бележка", image: "снимката", file: "файла", checklist: "списъка" }[type] || "бележката";
+      }
+
+      function resizeLabel(direction) {
+        return direction.replace("north", "горния").replace("south", "долния").replace("east", "десния").replace("west", "левия").replace("-", " и ");
+      }
+
+      function renderAll() {
+        board.querySelectorAll(".card").forEach((card) => card.remove());
+        items.forEach((item) => board.insertBefore(renderItem(item), canvas));
+        welcome.classList.toggle("hidden", items.length > 0 || strokes.length > 0 || connections.length > 0);
+        renderConnections();
+        updateLinkCards();
+        redrawStrokes();
+      }
+
+      function startDragging(event, element, item) {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const originalX = item.x;
+        const originalY = item.y;
+        element.classList.add("dragging");
+        element.setPointerCapture(event.pointerId);
+        const move = (pointerEvent) => {
+          const maxX = BOARD_WIDTH - element.offsetWidth;
+          const maxY = BOARD_HEIGHT - element.offsetHeight;
+          item.x = Math.max(0, Math.min(maxX, originalX + (pointerEvent.clientX - startX) / zoom));
+          item.y = Math.max(0, Math.min(maxY, originalY + (pointerEvent.clientY - startY) / zoom));
+          element.style.left = `${item.x}px`;
+          element.style.top = `${item.y}px`;
+          renderConnections();
+        };
+        const finish = () => {
+          element.classList.remove("dragging");
+          element.removeEventListener("pointermove", move);
+          element.removeEventListener("pointerup", finish);
+          element.removeEventListener("pointercancel", finish);
+          requestSave();
+        };
+        element.addEventListener("pointermove", move);
+        element.addEventListener("pointerup", finish, { once: true });
+        element.addEventListener("pointercancel", finish, { once: true });
+      }
+
+      function startResizing(event, element, item, direction) {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const original = { x: item.x, y: item.y, width: element.offsetWidth, height: element.offsetHeight };
+        const minWidth = item.type === "image" ? 210 : 190;
+        const minHeight = item.type === "image" ? 150 : item.type === "checklist" ? 150 : 125;
+        element.classList.add("resizing");
+        element.setPointerCapture(event.pointerId);
+
+        const move = (pointerEvent) => {
+          const dx = (pointerEvent.clientX - startX) / zoom;
+          const dy = (pointerEvent.clientY - startY) / zoom;
+          const originalRight = original.x + original.width;
+          const originalBottom = original.y + original.height;
+
+          if (direction.includes("west")) {
+            item.x = Math.max(0, Math.min(originalRight - minWidth, original.x + dx));
+            item.width = originalRight - item.x;
+          } else {
+            item.x = original.x;
+            item.width = Math.max(minWidth, Math.min(BOARD_WIDTH - item.x, original.width + (direction.includes("east") ? dx : 0)));
+          }
+
+          if (direction.includes("north")) {
+            item.y = Math.max(0, Math.min(originalBottom - minHeight, original.y + dy));
+            item.height = originalBottom - item.y;
+          } else {
+            item.y = original.y;
+            item.height = Math.max(minHeight, Math.min(BOARD_HEIGHT - item.y, original.height + (direction.includes("south") ? dy : 0)));
+          }
+
+          element.style.left = `${item.x}px`;
+          element.style.top = `${item.y}px`;
+          element.style.width = `${item.width}px`;
+          element.style.height = `${item.height}px`;
+          renderConnections();
+        };
+        const finish = () => {
+          element.classList.remove("resizing");
+          element.removeEventListener("pointermove", move);
+          element.removeEventListener("pointerup", finish);
+          element.removeEventListener("pointercancel", finish);
+          requestSave();
+        };
+        element.addEventListener("pointermove", move);
+        element.addEventListener("pointerup", finish, { once: true });
+        element.addEventListener("pointercancel", finish, { once: true });
+      }
+
+      function addItem(type, extra = {}) {
+        const size = type === "image" ? { width: 300, height: 260 } : { width: 286, height: type === "checklist" ? 205 : 175 };
+        const position = centerPosition(size.width, size.height);
+        const item = { id: makeId(), type, ...size, ...position, ...extra };
+        items.push(item);
+        renderAll();
+        requestSave();
+        const card = board.querySelector(`[data-id="${CSS.escape(item.id)}"]`);
+        if (type === "text") card.querySelector("textarea").focus();
+        if (type === "checklist") card.querySelector(".checklist-title").focus();
+      }
+
+      function removeItem(id) {
+        items = items.filter((item) => item.id !== id);
+        connections = connections.filter((connection) => connection.from !== id && connection.to !== id);
+        if (activeLinkSourceId === id) cancelLinkMode();
+        if (objectUrls.has(id)) {
+          URL.revokeObjectURL(objectUrls.get(id));
+          objectUrls.delete(id);
+        }
+        renderAll();
+        requestSave();
+      }
+
+      function openPreview(src) {
+        previewImage.src = src;
+        preview.classList.add("visible");
+        document.getElementById("preview-close").focus();
+      }
+
+      function closePreview() {
+        preview.classList.remove("visible");
+        previewImage.removeAttribute("src");
+      }
+
+      function setDrawingMode(enabled) {
+        if (enabled && (activeLinkSourceId || pickingLinkSource)) {
+          activeLinkSourceId = "";
+          pickingLinkSource = false;
+          resumeDrawingAfterLink = false;
+          setLinkMode(null);
+        }
+        drawing = enabled;
+        canvas.classList.toggle("drawing", enabled);
+        drawingHint.classList.toggle("visible", enabled);
+        document.getElementById("toggle-draw").classList.toggle("active", enabled);
+        document.getElementById("toggle-draw").setAttribute("aria-pressed", String(enabled));
+        if (enabled) showToast("Рисувай върху дъската. Натисни Esc, за да приключиш.");
+      }
+
+      function configureCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = BOARD_WIDTH * ratio;
+        canvas.height = BOARD_HEIGHT * ratio;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        redrawStrokes();
+      }
+
+      function redrawStrokes() {
+        if (!context) return;
+        const ratio = window.devicePixelRatio || 1;
+        context.clearRect(0, 0, BOARD_WIDTH * ratio, BOARD_HEIGHT * ratio);
+        context.save();
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        [...strokes, ...(currentStroke ? [currentStroke] : [])].forEach((stroke) => {
+          if (!stroke.points || stroke.points.length === 0) return;
+          context.beginPath();
+          context.moveTo(stroke.points[0].x, stroke.points[0].y);
+          stroke.points.slice(1).forEach((point) => context.lineTo(point.x, point.y));
+          context.strokeStyle = stroke.color || "#7768e8";
+          context.lineWidth = stroke.width || 4;
+          context.lineCap = "round";
+          context.lineJoin = "round";
+          context.stroke();
+        });
+        context.restore();
+        welcome.classList.toggle("hidden", items.length > 0 || strokes.length > 0 || Boolean(currentStroke));
+      }
+
+      board.addEventListener("pointerdown", (event) => {
+        if (!activeLinkSourceId && !pickingLinkSource) return;
+        const cardElement = event.target.closest(".card");
+        if (!cardElement) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          cancelLinkMode();
+          showToast("Режимът за свързване е отменен.");
+          return;
+        }
+        if (pickingLinkSource) {
+          const source = items.find((item) => item.id === cardElement.dataset.id);
+          if (!source || !(isImageItem(source) || source.type === "text" || source.type === "checklist")) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            showToast("Избери снимка, текстова бележка или списък.");
+            return;
+          }
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          pickingLinkSource = false;
+          setLinkMode(source.id);
+          return;
+        }
+        if (cardElement.dataset.id === activeLinkSourceId && event.target.closest("[data-link]")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        completeLinkMode(cardElement.dataset.id);
+      }, true);
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (!drawing || event.button !== 0) return;
+        const bounds = canvas.getBoundingClientRect();
+        currentStroke = {
+          color: "#7768e8",
+          width: 4,
+          points: [{ x: (event.clientX - bounds.left) / zoom, y: (event.clientY - bounds.top) / zoom }]
+        };
+        canvas.setPointerCapture(event.pointerId);
+        redrawStrokes();
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (!currentStroke) return;
+        const bounds = canvas.getBoundingClientRect();
+        currentStroke.points.push({ x: (event.clientX - bounds.left) / zoom, y: (event.clientY - bounds.top) / zoom });
+        redrawStrokes();
+      });
+      function finishStroke() {
+        if (!currentStroke) return;
+        strokes.push(currentStroke);
+        currentStroke = null;
+        redrawStrokes();
+        requestSave();
+      }
+      canvas.addEventListener("pointerup", finishStroke);
+      canvas.addEventListener("pointercancel", finishStroke);
+
+      document.getElementById("add-text").addEventListener("click", () => addItem("text", { text: "" }));
+      document.getElementById("add-checklist").addEventListener("click", () => addItem("checklist", { title: "", tasks: [] }));
+      document.getElementById("add-image").addEventListener("click", () => imageInput.click());
+      document.getElementById("add-file").addEventListener("click", () => fileInput.click());
+      document.getElementById("toggle-draw").addEventListener("click", () => setDrawingMode(!drawing));
+      document.getElementById("finish-drawing").addEventListener("click", () => setDrawingMode(false));
+      document.getElementById("draw-connect").addEventListener("click", beginLinkSelectionFromDrawing);
+      document.getElementById("cancel-link").addEventListener("click", cancelLinkMode);
+      projectTrigger.addEventListener("click", () => toggleProjectMenu());
+      document.getElementById("project-new").addEventListener("click", () => openProjectDialog("create"));
+      document.getElementById("project-dialog-cancel").addEventListener("click", closeProjectDialog);
+      projectName.addEventListener("input", () => projectName.setCustomValidity(""));
+      projectForm.addEventListener("submit", submitProjectDialog);
+      projectDialog.addEventListener("click", (event) => {
+        if (event.target === projectDialog) closeProjectDialog();
+      });
+      document.addEventListener("pointerdown", (event) => {
+        if (!projectPicker.contains(event.target) && !projectMenu.hidden) toggleProjectMenu(false);
+      });
+      document.getElementById("zoom-out").addEventListener("click", () => setZoom(zoom / 1.15));
+      document.getElementById("zoom-in").addEventListener("click", () => setZoom(zoom * 1.15));
+      document.getElementById("zoom-reset").addEventListener("click", () => setZoom(1));
+      document.getElementById("undo-stroke").addEventListener("click", () => {
+        if (!strokes.length) {
+          showToast("Няма линия за отмяна.");
+          return;
+        }
+        strokes.pop();
+        redrawStrokes();
+        requestSave();
+      });
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files && imageInput.files[0];
+        if (!file) return;
+        addItem("image", { name: file.name, blob: file, size: file.size, mime: file.type });
+        imageInput.value = "";
+      });
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const imageSize = isImageFile(file) ? { width: 300, height: 260 } : {};
+        addItem("file", { ...imageSize, name: file.name, blob: file, size: file.size, mime: file.type });
+        fileInput.value = "";
+      });
+      document.getElementById("preview-close").addEventListener("click", closePreview);
+      preview.addEventListener("click", (event) => { if (event.target === preview) closePreview(); });
+      document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && (event.key === "0" || event.code === "Numpad0")) {
+          event.preventDefault();
+          setZoom(1);
+          return;
+        }
+        if (event.key === "Escape") {
+          if (preview.classList.contains("visible")) closePreview();
+          else if (activeLinkSourceId || pickingLinkSource) cancelLinkMode();
+          else setDrawingMode(false);
+        }
+      });
+      boardScroll.addEventListener("wheel", (event) => {
+        if (event.shiftKey || event.target.closest("button, input, textarea, a, [contenteditable='true']")) return;
+        event.preventDefault();
+        const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? boardScroll.clientHeight : 1);
+        setZoom(zoom * Math.exp(-delta * 0.0015), event.clientX, event.clientY);
+      }, { passive: false });
+      window.addEventListener("resize", () => {
+        setZoom(zoom, undefined, undefined, false);
+        configureCanvas();
+      });
+
+      async function initialize() {
+        try {
+          database = await openDatabase();
+          const savedIndex = await readEntry(PROJECT_INDEX_KEY);
+          if (savedIndex && Array.isArray(savedIndex.projects) && savedIndex.projects.length > 0) {
+            projectIndex = savedIndex;
+            if (!projectIndex.projects.some((project) => project.id === projectIndex.activeId)) {
+              projectIndex.activeId = projectIndex.projects[0].id;
+            }
+          } else {
+            const legacyState = await readEntry(LEGACY_STATE_KEY);
+            const now = new Date().toISOString();
+            const project = { id: makeId(), name: DEFAULT_PROJECT_NAME, createdAt: now, updatedAt: now };
+            projectIndex = { activeId: project.id, projects: [project] };
+            await writeEntries([
+              [PROJECT_INDEX_KEY, projectIndex],
+              [projectStateKey(project.id), {
+                ...(legacyState || { items: [], strokes: [], zoom: 1 }),
+                connections: Array.isArray(legacyState?.connections) ? legacyState.connections : []
+              }]
+            ]);
+          }
+          activeProjectId = projectIndex.activeId;
+          await loadProject(activeProjectId);
+          renderProjectMenu();
+        } catch (error) {
+          console.error(error);
+          savedState.classList.add("error");
+          savedLabel.textContent = "Грешка при зареждане";
+          showToast("Данните не могат да се заредят. Опитай да отвориш приложението в друг браузър.");
+        }
+      }
+
+      toolButtons.forEach((button) => button.addEventListener("click", () => {
+        if (button.id !== "toggle-draw" && drawing) setDrawingMode(false);
+      }));
+      configureCanvas();
+      initialize();
+    })();
+  </script>
+</body>
+</html>
